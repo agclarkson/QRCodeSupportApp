@@ -159,13 +159,62 @@ class DataController: ObservableObject {
         print("🧨 DELETION PROCESS COMPLETED")
     }
     
-    // Export functionality - kept from the previous implementation
     func exportToCSV() {
+        print("DataController.exportToCSV() started")
         // Reset status
         exportSuccess = false
         exportError = nil
         
-        // Rest of the export implementation...
-        // [Existing code kept for brevity]
+        let context = container.viewContext
+        let fetchRequest: NSFetchRequest<QRCodeScan> = QRCodeScan.fetchRequest()
+        let sortDescriptor = NSSortDescriptor(keyPath: \QRCodeScan.timestamp, ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        
+        do {
+            let qrCodes = try context.fetch(fetchRequest)
+            print("Fetched \(qrCodes.count) QR codes from Core Data")
+            
+            if qrCodes.isEmpty {
+                exportError = "No QR codes to export"
+                print("No QR codes to export")
+                return
+            }
+            
+            // Get document directory URL
+            guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                exportError = "Could not access document directory"
+                print("Could not access document directory")
+                return
+            }
+            print("Documents directory: \(documentsDirectory.path)")
+            
+            // Generate timestamp for filenames
+            let currentDateTime = Date()
+            let filenameFormatter = DateFormatter()
+            filenameFormatter.dateFormat = "yyyyMMdd_HHmmss"
+            let timestamp = filenameFormatter.string(from: currentDateTime)
+            
+            // Try a simple test file first
+            let testFileURL = documentsDirectory.appendingPathComponent("test_\(timestamp).txt")
+            do {
+                try "Test file".write(to: testFileURL, atomically: true, encoding: .utf8)
+                print("Successfully created test file at: \(testFileURL.path)")
+            } catch {
+                print("Failed to create test file: \(error)")
+            }
+            
+            // Rest of your export code...
+            
+            // Set success flag at the end
+            print("Setting exportSuccess = true")
+            DispatchQueue.main.async {
+                self.exportSuccess = true
+                self.objectWillChange.send()
+                print("Notified observers of success state change")
+            }
+        } catch {
+            exportError = "Failed to fetch QR codes: \(error.localizedDescription)"
+            print("Error fetching QR codes: \(error)")
+        }
     }
 }
