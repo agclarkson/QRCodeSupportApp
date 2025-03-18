@@ -1,6 +1,6 @@
 # QR Scanner App
 
-A comprehensive QR code scanning iOS application built with SwiftUI and Core Data.
+A comprehensive QR code scanning iOS application built with SwiftUI and Core Data. That stores data but doesn't visit the site for security reasons.
 
 ## Features
 
